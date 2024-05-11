@@ -107,40 +107,61 @@ def find_pficp(G, pairs):
         u, v = edge
         paths = dfs(G, edge)
 
-        ic1_path = 1
-        ic2_path = 1
-        ic3_path = 0
-
         pair1 = (u, edge)
         pair2 = (v, edge)
 
         pair1_info = pairs.get(pair1)
         pair2_info = pairs.get(pair2)
 
-        for path in paths:
-            ic1_p, ic2_p, ic3_p = compute_is_of_path(path, pairs)
-            ic1_path = min(ic1_path, ic1_p)
-            ic2_path = min(ic2_path, ic2_p)
-            ic3_path = max(ic3_path, ic3_p)
+        if len(paths) == 0:
+            icn1 = max(pair1_info["PM"], pair2_info["PM"])
+            icn2 = max(pair1_info["NM"], pair2_info["NM"])
+            icn3 = min(pair1_info["nM"], pair2_info["nM"])
 
-        icn1 = max(pair1_info["PM"], pair2_info["PM"], ic1_path)
-        icn2 = max(pair1_info["NM"], pair2_info["NM"], ic2_path)
-        icn3 = min(pair1_info["nM"], pair2_info["nM"], ic3_path)
+            # af = after remove
+            icn1_af = pair2_info["PM"]
+            icn2_af = pair2_info["NM"]
+            icn3_af = pair2_info["nM"]
 
-        # af = after remove
-        icn1_af = max(pair2_info["PM"], ic1_path)
-        icn2_af = max(pair2_info["NM"], ic2_path)
-        icn3_af = min(pair2_info["nM"], ic3_path)
+            if icn1_af <= icn1 and icn2_af <= icn2 and icn3_af >= icn3:
+                pficps.append(pair1)
 
-        if icn1_af <= icn1 and icn2_af <= icn2 and icn3_af >= icn3:
-            pficps.append(pair1)
+            icn1_af = pair1_info["PM"]
+            icn2_af = pair1_info["NM"]
+            icn3_af = pair1_info["nM"]
 
-        icn1_af = max(pair1_info["PM"], ic1_path)
-        icn2_af = max(pair1_info["NM"], ic2_path)
-        icn3_af = min(pair1_info["nM"], ic3_path)
+            if icn1_af <= icn1 and icn2_af <= icn2 and icn3_af >= icn3:
+                pficps.append(pair2)
 
-        if icn1_af <= icn1 and icn2_af <= icn2 and icn3_af >= icn3:
-            pficps.append(pair2)
+        else:
+            ic1_path = 1
+            ic2_path = 1
+            ic3_path = 0
+
+            for path in paths:
+                ic1_p, ic2_p, ic3_p = compute_is_of_path(path, pairs)
+                ic1_path = min(ic1_path, ic1_p)
+                ic2_path = min(ic2_path, ic2_p)
+                ic3_path = max(ic3_path, ic3_p)
+
+            icn1 = max(pair1_info["PM"], pair2_info["PM"], ic1_path)
+            icn2 = max(pair1_info["NM"], pair2_info["NM"], ic2_path)
+            icn3 = min(pair1_info["nM"], pair2_info["nM"], ic3_path)
+
+            # af = after remove
+            icn1_af = max(pair2_info["PM"], ic1_path)
+            icn2_af = max(pair2_info["NM"], ic2_path)
+            icn3_af = min(pair2_info["nM"], ic3_path)
+
+            if icn1_af <= icn1 and icn2_af <= icn2 and icn3_af >= icn3:
+                pficps.append(pair1)
+
+            icn1_af = max(pair1_info["PM"], ic1_path)
+            icn2_af = max(pair1_info["NM"], ic2_path)
+            icn3_af = min(pair1_info["nM"], ic3_path)
+
+            if icn1_af <= icn1 and icn2_af <= icn2 and icn3_af >= icn3:
+                pficps.append(pair2)
 
     return pficps
 
@@ -206,9 +227,12 @@ pairs = {
 
 # List pair là PFICP
 pficps = find_pficp(G, pairs)
+print("PFICP:")
+for pair in pficps:
+    print(pair)
 
 start = "India"
-end = "Mexico"
+end = "UAE"
 
 paths = a_star_search(G, start, end)
 
