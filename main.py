@@ -227,9 +227,6 @@ pairs = {
 
 # List pair là PFICP
 pficps = find_pficp(G, pairs)
-print("PFICP:")
-for pair in pficps:
-    print(pair)
 
 start = "India"
 end = "Mexico"
