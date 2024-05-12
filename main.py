@@ -123,14 +123,14 @@ def find_pficp(G, pairs):
             icn2_af = pair2_info["NM"]
             icn3_af = pair2_info["nM"]
 
-            if icn1_af <= icn1 and icn2_af <= icn2 and icn3_af >= icn3:
+            if icn1_af < icn1 and icn2_af < icn2 and icn3_af > icn3:
                 pficps.append(pair1)
 
             icn1_af = pair1_info["PM"]
             icn2_af = pair1_info["NM"]
             icn3_af = pair1_info["nM"]
 
-            if icn1_af <= icn1 and icn2_af <= icn2 and icn3_af >= icn3:
+            if icn1_af < icn1 and icn2_af < icn2 and icn3_af > icn3:
                 pficps.append(pair2)
 
         else:
@@ -153,14 +153,14 @@ def find_pficp(G, pairs):
             icn2_af = max(pair2_info["NM"], ic2_path)
             icn3_af = min(pair2_info["nM"], ic3_path)
 
-            if icn1_af <= icn1 and icn2_af <= icn2 and icn3_af >= icn3:
+            if icn1_af < icn1 and icn2_af < icn2 and icn3_af > icn3:
                 pficps.append(pair1)
 
             icn1_af = max(pair1_info["PM"], ic1_path)
             icn2_af = max(pair1_info["NM"], ic2_path)
             icn3_af = min(pair1_info["nM"], ic3_path)
 
-            if icn1_af <= icn1 and icn2_af <= icn2 and icn3_af >= icn3:
+            if icn1_af < icn1 and icn2_af < icn2 and icn3_af > icn3:
                 pficps.append(pair2)
 
     return pficps
@@ -232,7 +232,7 @@ for pair in pficps:
     print(pair)
 
 start = "India"
-end = "UAE"
+end = "Mexico"
 
 paths = a_star_search(G, start, end)
 
