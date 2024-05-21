@@ -1,5 +1,6 @@
 import networkx as nx
 import heapq
+import random
 
 
 def sorted_edge(edge):
@@ -188,6 +189,33 @@ def recommed_route(paths, pficps):
     return paths[0]
 
 
+def update_pairs(pairs):
+    for pair in pairs:
+        PM = random.random()
+        NM = random.random()
+        nM = random.random()
+
+        total = PM + NM + nM
+        if total > 1:
+            scale = random.random()
+            scale = random.uniform(total, total + scale)
+            PM /= scale
+            NM /= scale
+            nM /= scale
+
+        pairs[pair]["PM"] = round(PM, 2)
+        pairs[pair]["NM"] = round(NM, 2)
+        pairs[pair]["nM"] = round(nM, 2)
+
+
+def print_pairs_info(pairs):
+    print("Pair information:")
+    for key, value in pairs.items():
+        total = value["PM"] + value["NM"] + value["nM"]
+        total = round(total, 2)
+        print("Key:", key, ", value:", value, ", Total:", total)
+
+
 # Tạo đồ thị PFIG
 G = nx.Graph()
 
@@ -225,13 +253,44 @@ pairs = {
     ("Mexico", ("Mexico", "Nicaragua")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
 }
 
-# List pair là PFICP
-pficps = find_pficp(G, pairs)
-
 start = "India"
 end = "Mexico"
+current_node = start
 
-paths = a_star_search(G, start, end)
+while current_node != end:
+    # Cập nhật giá trị PM, NM, nM của từng pair khi đến node mới (mô phỏng theo thời gian thực)
+    # Sau đó in ra toàn bộ giá trị của các pair
+    update_pairs(pairs)
+    print_pairs_info(pairs)
+    print()
 
-print("Recommend route from", start, "to", end, "is:")
-print(recommed_route(paths, pficps))
+    # Tìm các pair là PFICP và in ra
+    pficps = find_pficp(G, pairs)
+    print("PFICPs:", pficps)
+
+    # Thuật toán tìm đường A* tìm đường từ node hiện tại đến đích, lấy 3 đường ngắn nhất
+    paths = a_star_search(G, current_node, end)
+
+    # Xét 3 đường tìm được từ A* ở trên, nếu đường nào có PFICP (quan trọng) thì bỏ qua, xét
+    # đường tiếp theo, nếu cả 3 đường đều có PFICP thì lấy đường có độ dài ngắn nhất
+    recommended_path = recommed_route(paths, pficps)
+
+    # Đi đến node tiếp theo
+    next_node = recommended_path[1]
+    print()
+    print(f"Currently at node: {current_node}, moving to node: {next_node}")
+
+    # Chuyển sang node tiếp theo
+    current_node = next_node
+
+# Trong bài toán chọn con đường tối ưu để hạn chế tắc đường, nếu có 1 đoạn là PFICP và 1 đoạn không thì nên ưu tiên
+# chọn con đường nào?
+
+# Trong bối cảnh chọn đường tối ưu để hạn chế tắc đường, việc xác định PFICP (Picture Fuzzy Incidence Cut-Pair)
+# có thể đóng một vai trò quan trọng trong việc đưa ra quyết định chọn đường. Để quyết định xem nên ưu tiên chọn
+# con đường có PFICP hay không, bạn cần cân nhắc các yếu tố sau:
+
+# PFICP Là Gì Trong Bối Cảnh Chọn Đường
+# PFICP là cặp đỉnh-cạnh mà khi bị loại bỏ, có thể làm cho đồ thị bị gián đoạn hoặc giảm đáng kể mức độ kết nối.
+# Trong bối cảnh giao thông, đoạn đường là PFICP có thể đại diện cho "nút cổ chai" hoặc đoạn đường quan trọng
+# mà nếu bị tắc, toàn bộ mạng lưới giao thông có thể bị ảnh hưởng nghiêm trọng.
