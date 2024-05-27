@@ -1,6 +1,41 @@
 import networkx as nx
 import heapq
 import random
+import time
+
+from collections import deque
+
+
+def bfs_search(G, start, end):
+    queue = deque([(start, [start])])
+
+    while queue:
+        current_node, path = queue.popleft()
+
+        if current_node == end:
+            return list(path)
+
+        for neighbor in G.neighbors(current_node):
+            if neighbor not in path:
+                queue.append((neighbor, path + [neighbor]))
+
+    return None
+
+
+def dfs_search(G, start, end):
+    stack = [(start, [start])]
+
+    while stack:
+        current_node, path = stack.pop()
+
+        if current_node == end:
+            return list(path)
+
+        for neighbor in G.neighbors(current_node):
+            if neighbor not in path:
+                stack.append((neighbor, path + [neighbor]))
+
+    return None
 
 
 def sorted_edge(edge):
@@ -221,44 +256,130 @@ G = nx.Graph()
 
 G.add_nodes_from(
     [
-        ("India", {"coord": (20, 40)}),
-        ("UAE", {"coord": (40, 20)}),
-        ("Russia", {"coord": (40, 40)}),
-        ("Nicaragua", {"coord": (60, 20)}),
-        ("Mexico", {"coord": (60, 40)}),
+        ("My Dinh", {"coord": (20, 40)}),
+        ("Nguyen Chi Thanh", {"coord": (40, 20)}),
+        ("Duong Lang", {"coord": (40, 40)}),
+        ("La Thanh", {"coord": (60, 20)}),
+        ("Xa Dan", {"coord": (60, 40)}),
+        ("Giai Phong", {"coord": (80, 40)}),
+        ("Pho Vong", {"coord": (80, 60)}),
+        ("Bach Mai", {"coord": (80, 80)}),
+        ("Dai Co Viet", {"coord": (60, 60)}),
+        ("Thanh Nhan", {"coord": (60, 80)}),
+        ("Le Duan", {"coord": (40, 80)}),
+        ("Kham Thien", {"coord": (20, 60)}),
     ]
 )
 
 # Thêm các cạnh (edges) với trọng số
 G.add_edges_from(
     [
-        ("India", "UAE"),
-        ("India", "Russia"),
-        ("Russia", "UAE"),
-        ("UAE", "Nicaragua"),
-        ("Nicaragua", "Mexico"),
+        ("My Dinh", "Nguyen Chi Thanh"),
+        ("Duong Lang", "My Dinh"),
+        ("Duong Lang", "Nguyen Chi Thanh"),
+        ("La Thanh", "Nguyen Chi Thanh"),
+        ("La Thanh", "Xa Dan"),
+        ("Giai Phong", "La Thanh"),
+        ("Giai Phong", "Xa Dan"),
+        ("Kham Thien", "My Dinh"),
+        ("Dai Co Viet", "Giai Phong"),
+        ("Giai Phong", "Pho Vong"),
+        ("Dai Co Viet", "Kham Thien"),
+        ("Dai Co Viet", "Pho Vong"),
+        ("Kham Thien", "Le Duan"),
+        ("Dai Co Viet", "Le Duan"),
+        ("Dai Co Viet", "Thanh Nhan"),
+        ("Bach Mai", "Pho Vong"),
+        ("Bach Mai", "Thanh Nhan"),
+        ("Le Duan", "Thanh Nhan"),
     ]
 )
 
 pairs = {
-    ("India", ("India", "UAE")): {"PM": 0.05, "NM": 0.3, "nM": 0.39},
-    ("UAE", ("India", "UAE")): {"PM": 0.1, "NM": 0.2, "nM": 0.31},
-    ("India", ("India", "Russia")): {"PM": 0.12, "NM": 0.21, "nM": 0.42},
-    ("Russia", ("India", "Russia")): {"PM": 0.2, "NM": 0.29, "nM": 0.4},
-    ("UAE", ("Russia", "UAE")): {"PM": 0.2, "NM": 0.15, "nM": 0.5},
-    ("Russia", ("Russia", "UAE")): {"PM": 0.2, "NM": 0.17, "nM": 0.48},
-    ("UAE", ("Nicaragua", "UAE")): {"PM": 0.1, "NM": 0.06, "nM": 0.33},
-    ("Nicaragua", ("Nicaragua", "UAE")): {"PM": 0.19, "NM": 0.01, "nM": 0.32},
-    ("Nicaragua", ("Mexico", "Nicaragua")): {"PM": 0.23, "NM": 0.01, "nM": 0.21},
-    ("Mexico", ("Mexico", "Nicaragua")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("My Dinh", ("My Dinh", "Nguyen Chi Thanh")): {"PM": 0.05, "NM": 0.3, "nM": 0.39},
+    ("Nguyen Chi Thanh", ("My Dinh", "Nguyen Chi Thanh")): {
+        "PM": 0.1,
+        "NM": 0.2,
+        "nM": 0.31,
+    },
+    ("My Dinh", ("Duong Lang", "My Dinh")): {"PM": 0.12, "NM": 0.21, "nM": 0.42},
+    ("Duong Lang", ("Duong Lang", "My Dinh")): {"PM": 0.2, "NM": 0.29, "nM": 0.4},
+    ("Nguyen Chi Thanh", ("Duong Lang", "Nguyen Chi Thanh")): {
+        "PM": 0.2,
+        "NM": 0.15,
+        "nM": 0.5,
+    },
+    ("Duong Lang", ("Duong Lang", "Nguyen Chi Thanh")): {
+        "PM": 0.2,
+        "NM": 0.17,
+        "nM": 0.48,
+    },
+    ("Nguyen Chi Thanh", ("La Thanh", "Nguyen Chi Thanh")): {
+        "PM": 0.1,
+        "NM": 0.06,
+        "nM": 0.33,
+    },
+    ("La Thanh", ("La Thanh", "Nguyen Chi Thanh")): {
+        "PM": 0.19,
+        "NM": 0.01,
+        "nM": 0.32,
+    },
+    ("La Thanh", ("La Thanh", "Xa Dan")): {"PM": 0.23, "NM": 0.01, "nM": 0.21},
+    ("Xa Dan", ("La Thanh", "Xa Dan")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Giai Phong", ("Giai Phong", "La Thanh")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("La Thanh", ("Giai Phong", "La Thanh")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Giai Phong", ("Giai Phong", "Xa Dan")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Xa Dan", ("Giai Phong", "Xa Dan")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Kham Thien", ("Kham Thien", "My Dinh")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("My Dinh", ("Kham Thien", "My Dinh")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Dai Co Viet", ("Dai Co Viet", "Giai Phong")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Giai Phong", ("Dai Co Viet", "Giai Phong")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Giai Phong", ("Giai Phong", "Pho Vong")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Pho Vong", ("Giai Phong", "Pho Vong")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Dai Co Viet", ("Dai Co Viet", "Kham Thien")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Kham Thien", ("Dai Co Viet", "Kham Thien")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Dai Co Viet", ("Dai Co Viet", "Pho Vong")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Pho Vong", ("Dai Co Viet", "Pho Vong")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Kham Thien", ("Kham Thien", "Le Duan")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Le Duan", ("Kham Thien", "Le Duan")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Dai Co Viet", ("Dai Co Viet", "Le Duan")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Le Duan", ("Dai Co Viet", "Le Duan")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Dai Co Viet", ("Dai Co Viet", "Thanh Nhan")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Thanh Nhan", ("Dai Co Viet", "Thanh Nhan")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Bach Mai", ("Bach Mai", "Pho Vong")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Pho Vong", ("Bach Mai", "Pho Vong")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Bach Mai", ("Bach Mai", "Thanh Nhan")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Thanh Nhan", ("Bach Mai", "Thanh Nhan")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Le Duan", ("Le Duan", "Thanh Nhan")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
+    ("Thanh Nhan", ("Le Duan", "Thanh Nhan")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
 }
 
-start = "India"
-end = "Mexico"
-current_node = start
+start = "My Dinh"
+end = "Thanh Nhan"
 
-while current_node != end:
+a_star_current_node = start
+bfs_current_node = start
+dfs_current_node = start
+
+# Tổng thời gian code chạy
+a_star_time = 0
+bfs_time = 0
+dfs_time = 0
+
+# Tổng độ dài quãng đường
+a_star_length = 0
+bfs_length = 0
+dfs_length = 0
+
+a_star_path = [start]
+bfs_path = [start]
+dfs_path = [start]
+
+while (
+    a_star_current_node != end and bfs_current_node != end and dfs_current_node != end
+):
     # Cập nhật giá trị PM, NM, nM của từng pair khi đến node mới (mô phỏng theo thời gian thực)
+    # Hiện tại giá trị được cập nhật random sao cho 0 <= PM + NM + nM <= 1
     # Sau đó in ra toàn bộ giá trị của các pair
     update_pairs(pairs)
     print_pairs_info(pairs)
@@ -268,20 +389,92 @@ while current_node != end:
     pficps = find_pficp(G, pairs)
     print("PFICPs:", pficps)
 
-    # Thuật toán tìm đường A* tìm đường từ node hiện tại đến đích, lấy 3 đường ngắn nhất
-    paths = a_star_search(G, current_node, end)
+    if a_star_current_node != end:
+        start_time = time.time()
 
-    # Xét 3 đường tìm được từ A* ở trên, nếu đường nào có PFICP (quan trọng) thì bỏ qua, xét
-    # đường tiếp theo, nếu cả 3 đường đều có PFICP thì lấy đường có độ dài ngắn nhất
-    recommended_path = recommed_route(paths, pficps)
+        # Thuật toán tìm đường A* tìm đường từ node hiện tại đến đích, lấy 3 đường ngắn nhất
+        paths = a_star_search(G, a_star_current_node, end)
 
-    # Đi đến node tiếp theo
-    next_node = recommended_path[1]
-    print()
-    print(f"Currently at node: {current_node}, moving to node: {next_node}")
+        # Xét 3 đường tìm được từ A* ở trên, nếu đường nào có PFICP (quan trọng) thì bỏ qua, xét
+        # đường tiếp theo, nếu cả 3 đường đều có PFICP thì lấy đường có độ dài ngắn nhất
+        recommended_path = recommed_route(paths, pficps)
 
-    # Chuyển sang node tiếp theo
-    current_node = next_node
+        # Đi đến node tiếp theo
+        next_node = recommended_path[1]
+        print(
+            f"With A* search, currently at node: {a_star_current_node}, moving to node: {next_node}"
+        )
+
+        edge_length = euclidean_distance(
+            G.nodes[a_star_current_node]["coord"], G.nodes[next_node]["coord"]
+        )
+
+        a_star_length += edge_length
+
+        # Chuyển sang node tiếp theo
+        a_star_current_node = next_node
+        a_star_path.append(a_star_current_node)
+
+        a_star_time += time.time() - start_time
+
+    if bfs_current_node != end:
+        start_time = time.time()
+
+        paths = bfs_search(G, bfs_current_node, end)
+
+        next_node = recommended_path[1]
+        print(
+            f"With BFS search, currently at node: {bfs_current_node}, moving to node: {next_node}"
+        )
+
+        edge_length = euclidean_distance(
+            G.nodes[bfs_current_node]["coord"], G.nodes[next_node]["coord"]
+        )
+
+        bfs_length += edge_length
+
+        bfs_current_node = next_node
+        bfs_path.append(bfs_current_node)
+
+        bfs_time += time.time() - start_time
+
+    if dfs_current_node != end:
+        start_time = time.time()
+
+        paths = dfs_search(G, dfs_current_node, end)
+
+        next_node = recommended_path[1]
+        print(
+            f"With DFS search, currently at node: {dfs_current_node}, moving to node: {next_node}"
+        )
+
+        edge_length = euclidean_distance(
+            G.nodes[dfs_current_node]["coord"], G.nodes[next_node]["coord"]
+        )
+
+        dfs_length += edge_length
+
+        dfs_current_node = next_node
+        dfs_path.append(dfs_current_node)
+
+        dfs_time += time.time() - start_time
+
+        print()
+
+# a_star_time = round(a_star_time, 2)
+# bfs_time = round(bfs_time, 2)
+# dfs_time = round(dfs_time, 2)
+
+a_star_length = round(a_star_length, 2)
+bfs_length = round(bfs_length, 2)
+dfs_length = round(dfs_length, 2)
+
+print("A* route:", a_star_path)
+print("Total code run time:", a_star_time, ". Total route length:", a_star_length)
+print("BFS route:", bfs_path)
+print("Total code run time:", bfs_time, ". Total route length:", bfs_length)
+print("DFS route:", dfs_path)
+print("Total code run time:", dfs_time, ". Total route length:", dfs_length)
 
 # Trong bài toán chọn con đường tối ưu để hạn chế tắc đường, nếu có 1 đoạn là PFICP và 1 đoạn không thì nên ưu tiên
 # chọn con đường nào?
