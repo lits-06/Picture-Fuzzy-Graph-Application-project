@@ -1,41 +1,44 @@
 import networkx as nx
 import heapq
 import random
-import time
 
 from collections import deque
 
 
 def bfs_search(G, start, end):
     queue = deque([(start, [start])])
+    paths = []
 
     while queue:
         current_node, path = queue.popleft()
 
         if current_node == end:
-            return list(path)
+            paths.append(path)
+            continue
 
         for neighbor in G.neighbors(current_node):
             if neighbor not in path:
                 queue.append((neighbor, path + [neighbor]))
 
-    return None
+    return paths
 
 
 def dfs_search(G, start, end):
     stack = [(start, [start])]
+    paths = []
 
     while stack:
         current_node, path = stack.pop()
 
         if current_node == end:
-            return list(path)
+            paths.append(path)
+            continue
 
         for neighbor in G.neighbors(current_node):
             if neighbor not in path:
                 stack.append((neighbor, path + [neighbor]))
 
-    return None
+    return paths
 
 
 def sorted_edge(edge):
@@ -50,13 +53,13 @@ def euclidean_distance(coord1, coord2):
 
 
 # Hàm A* để tìm tối đa 3 đường từ start đến goal
-def a_star_search(G, start, goal, max_paths=3):
+def a_star_search(G, start, goal):
     frontier = []
     heapq.heappush(frontier, (0, [start]))  # (chi phí, đường dẫn)
 
     paths = []  # Lưu trữ các đường dẫn tìm được
 
-    while frontier and len(paths) < max_paths:
+    while frontier:
         current_cost, current_path = heapq.heappop(frontier)
         current_node = current_path[-1]  # Đỉnh cuối của đường dẫn
 
@@ -202,26 +205,79 @@ def find_pficp(G, pairs):
     return pficps
 
 
-# Nếu đường có PFICP thì trả về True, còn không thì False
+# Kiểm tra đoạn đường sắp đi có phải PFICP không
 def check_pficp_in_path(path, pficps):
-    for i in range(len(path) - 1):
-        edge = sorted_edge((path[i], path[i + 1]))
-        if (path[i], edge) in pficps:
-            return True
+    edge = sorted_edge((path[0], path[1]))
+    if (path[0], edge) in pficps:
+        return True
 
     return False
+
+    # for i in range(len(path) - 1):
+    #     edge = sorted_edge((path[i], path[i + 1]))
+    #     if (path[i], edge) in pficps:
+    #         return True
+
+    # return False
 
 
 # Kiểm tra các đoạn đường, nếu đoạn nào có PFICP thì bỏ qua, nếu tất cả đoạn đường đều có PFICP
 # thì lấy đoạn đường ngắn nhất
-def recommed_route(paths, pficps):
+def recommed_route(paths, pficps, visited):
     for path in paths:
         if check_pficp_in_path(path, pficps):
             continue
         else:
-            return path
+            valid = True
+            for node in path[1:]:
+                if node in visited:
+                    valid = False
+                    break
 
-    return paths[0]
+            if valid:
+                return path
+
+    return None
+
+
+def move_to_next_node(
+    current_node,
+    current_node_index,
+    search_func,
+    search_visited,
+    search_path,
+    search_length,
+    search_time,
+):
+    if current_node != end:
+        paths = search_func(G, current_node, end)
+        path = recommed_route(paths, pficps, search_visited)
+
+        if path:
+            search_path = search_path[:current_node_index] + path
+
+        next_node = search_path[current_node_index + 1]
+        print(
+            f"With {search_func.__name__}, currently at node: {current_node}, moving to node: {next_node}"
+        )
+
+        edge_length = euclidean_distance(
+            G.nodes[current_node]["coord"], G.nodes[next_node]["coord"]
+        )
+        search_length += edge_length
+
+        scale = 1
+        pair = (current_node, sorted_edge((current_node, next_node)))
+        if pair in pficps:
+            scale = 2
+
+        search_time += edge_length / speed * scale
+
+        search_visited.add(next_node)
+        current_node_index += 1
+        current_node = next_node
+
+    return current_node, current_node_index, search_path, search_length, search_time
 
 
 def update_pairs(pairs):
@@ -354,8 +410,9 @@ pairs = {
     ("Thanh Nhan", ("Le Duan", "Thanh Nhan")): {"PM": 0.21, "NM": 0.02, "nM": 0.3},
 }
 
-start = "My Dinh"
-end = "Thanh Nhan"
+start = "Bach Mai"
+end = "Duong Lang"
+speed = 40
 
 a_star_current_node = start
 bfs_current_node = start
@@ -375,9 +432,25 @@ a_star_path = [start]
 bfs_path = [start]
 dfs_path = [start]
 
-while (
-    a_star_current_node != end and bfs_current_node != end and dfs_current_node != end
-):
+a_star_visited = set()
+bfs_visited = set()
+dfs_visited = set()
+a_star_visited.add(start)
+bfs_visited.add(start)
+dfs_visited.add(start)
+
+a_star_current_node_index = 0
+bfs_current_node_index = 0
+dfs_current_node_index = 0
+
+while True:
+    if (
+        a_star_current_node == end
+        and bfs_current_node == end
+        and dfs_current_node == end
+    ):
+        break
+
     # Cập nhật giá trị PM, NM, nM của từng pair khi đến node mới (mô phỏng theo thời gian thực)
     # Hiện tại giá trị được cập nhật random sao cho 0 <= PM + NM + nM <= 1
     # Sau đó in ra toàn bộ giá trị của các pair
@@ -389,92 +462,73 @@ while (
     pficps = find_pficp(G, pairs)
     print("PFICPs:", pficps)
 
-    if a_star_current_node != end:
-        start_time = time.time()
-
-        # Thuật toán tìm đường A* tìm đường từ node hiện tại đến đích, lấy 3 đường ngắn nhất
+    if a_star_current_node_index == 0:
         paths = a_star_search(G, a_star_current_node, end)
-
-        # Xét 3 đường tìm được từ A* ở trên, nếu đường nào có PFICP (quan trọng) thì bỏ qua, xét
-        # đường tiếp theo, nếu cả 3 đường đều có PFICP thì lấy đường có độ dài ngắn nhất
-        recommended_path = recommed_route(paths, pficps)
-
-        # Đi đến node tiếp theo
-        next_node = recommended_path[1]
-        print(
-            f"With A* search, currently at node: {a_star_current_node}, moving to node: {next_node}"
-        )
-
-        edge_length = euclidean_distance(
-            G.nodes[a_star_current_node]["coord"], G.nodes[next_node]["coord"]
-        )
-
-        a_star_length += edge_length
-
-        # Chuyển sang node tiếp theo
-        a_star_current_node = next_node
-        a_star_path.append(a_star_current_node)
-
-        a_star_time += time.time() - start_time
-
-    if bfs_current_node != end:
-        start_time = time.time()
-
+        a_star_path = paths[0]
+    if bfs_current_node_index == 0:
         paths = bfs_search(G, bfs_current_node, end)
-
-        next_node = recommended_path[1]
-        print(
-            f"With BFS search, currently at node: {bfs_current_node}, moving to node: {next_node}"
-        )
-
-        edge_length = euclidean_distance(
-            G.nodes[bfs_current_node]["coord"], G.nodes[next_node]["coord"]
-        )
-
-        bfs_length += edge_length
-
-        bfs_current_node = next_node
-        bfs_path.append(bfs_current_node)
-
-        bfs_time += time.time() - start_time
-
-    if dfs_current_node != end:
-        start_time = time.time()
-
+        bfs_path = paths[0]
+    if dfs_current_node_index == 0:
         paths = dfs_search(G, dfs_current_node, end)
+        dfs_path = paths[0]
 
-        next_node = recommended_path[1]
-        print(
-            f"With DFS search, currently at node: {dfs_current_node}, moving to node: {next_node}"
+    (
+        a_star_current_node,
+        a_star_current_node_index,
+        a_star_path,
+        a_star_length,
+        a_star_time,
+    ) = move_to_next_node(
+        a_star_current_node,
+        a_star_current_node_index,
+        a_star_search,
+        a_star_visited,
+        a_star_path,
+        a_star_length,
+        a_star_time,
+    )
+
+    bfs_current_node, bfs_current_node_index, bfs_path, bfs_length, bfs_time = (
+        move_to_next_node(
+            bfs_current_node,
+            bfs_current_node_index,
+            bfs_search,
+            bfs_visited,
+            bfs_path,
+            bfs_length,
+            bfs_time,
         )
+    )
 
-        edge_length = euclidean_distance(
-            G.nodes[dfs_current_node]["coord"], G.nodes[next_node]["coord"]
+    dfs_current_node, dfs_current_node_index, dfs_path, dfs_length, dfs_time = (
+        move_to_next_node(
+            dfs_current_node,
+            dfs_current_node_index,
+            dfs_search,
+            dfs_visited,
+            dfs_path,
+            dfs_length,
+            dfs_time,
         )
+    )
 
-        dfs_length += edge_length
+    print()
 
-        dfs_current_node = next_node
-        dfs_path.append(dfs_current_node)
-
-        dfs_time += time.time() - start_time
-
-        print()
-
-# a_star_time = round(a_star_time, 2)
-# bfs_time = round(bfs_time, 2)
-# dfs_time = round(dfs_time, 2)
+a_star_time = round(a_star_time, 2)
+bfs_time = round(bfs_time, 2)
+dfs_time = round(dfs_time, 2)
 
 a_star_length = round(a_star_length, 2)
 bfs_length = round(bfs_length, 2)
 dfs_length = round(dfs_length, 2)
 
+print("Speed:", speed, "km/h")
 print("A* route:", a_star_path)
-print("Total code run time:", a_star_time, ". Total route length:", a_star_length)
+print("Total run time:", a_star_time, "hours. Total route length:", a_star_length)
 print("BFS route:", bfs_path)
-print("Total code run time:", bfs_time, ". Total route length:", bfs_length)
+print("Total run time:", bfs_time, "hours. Total route length:", bfs_length)
 print("DFS route:", dfs_path)
-print("Total code run time:", dfs_time, ". Total route length:", dfs_length)
+print("Total run time:", dfs_time, "hours. Total route length:", dfs_length)
 
 # Trong bài toán chọn con đường tối ưu để hạn chế tắc đường, nếu có 1 đoạn là PFICP và 1 đoạn không thì nên ưu tiên
 # chọn con đường nào?
