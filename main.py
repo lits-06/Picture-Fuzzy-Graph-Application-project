@@ -274,7 +274,7 @@ def move_to_next_node(
         scale = 1
         pair = (current_node, sorted_edge((current_node, next_node)))
         if pair in pficps:
-            scale = 2
+            scale = 1.2
 
         search_time += edge_length / speed * scale
 
@@ -555,7 +555,7 @@ dfs_length = round(dfs_length, 2)
 print("Speed:", speed, "km/h")
 print("A* route:", a_star_path)
 print(
-    "Total run time:",
+    "Estimate time:",
     a_star_time,
     "hours. Total route length:",
     a_star_length,
@@ -565,7 +565,7 @@ print(
 )
 print("BFS route:", bfs_path)
 print(
-    "Total run time:",
+    "Estimate time:",
     bfs_time,
     "hours. Total route length:",
     bfs_length,
@@ -575,7 +575,7 @@ print(
 )
 print("DFS route:", dfs_path)
 print(
-    "Total run time:",
+    "Estimate time:",
     dfs_time,
     "hours. Total route length:",
     dfs_length,
