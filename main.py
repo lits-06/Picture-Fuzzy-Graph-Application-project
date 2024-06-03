@@ -1,6 +1,7 @@
 import networkx as nx
 import heapq
 import random
+import time
 
 from collections import deque
 
@@ -248,13 +249,17 @@ def move_to_next_node(
     search_path,
     search_length,
     search_time,
+    search_code_runtime,
 ):
     if current_node != end:
+        start_time = time.time()
         paths = search_func(G, current_node, end)
         path = recommed_route(paths, pficps, search_visited)
 
         if path:
             search_path = search_path[:current_node_index] + path
+
+        search_code_runtime += time.time() - start_time
 
         next_node = search_path[current_node_index + 1]
         print(
@@ -277,7 +282,14 @@ def move_to_next_node(
         current_node_index += 1
         current_node = next_node
 
-    return current_node, current_node_index, search_path, search_length, search_time
+    return (
+        current_node,
+        current_node_index,
+        search_path,
+        search_length,
+        search_time,
+        search_code_runtime,
+    )
 
 
 def update_pairs(pairs):
@@ -423,6 +435,10 @@ a_star_time = 0
 bfs_time = 0
 dfs_time = 0
 
+a_star_code_runtime = 0
+bfs_code_runtime = 0
+dfs_code_runtime = 0
+
 # Tổng độ dài quãng đường
 a_star_length = 0
 bfs_length = 0
@@ -478,6 +494,7 @@ while True:
         a_star_path,
         a_star_length,
         a_star_time,
+        a_star_code_runtime,
     ) = move_to_next_node(
         a_star_current_node,
         a_star_current_node_index,
@@ -486,30 +503,43 @@ while True:
         a_star_path,
         a_star_length,
         a_star_time,
+        a_star_code_runtime,
     )
 
-    bfs_current_node, bfs_current_node_index, bfs_path, bfs_length, bfs_time = (
-        move_to_next_node(
-            bfs_current_node,
-            bfs_current_node_index,
-            bfs_search,
-            bfs_visited,
-            bfs_path,
-            bfs_length,
-            bfs_time,
-        )
+    (
+        bfs_current_node,
+        bfs_current_node_index,
+        bfs_path,
+        bfs_length,
+        bfs_time,
+        bfs_code_runtime,
+    ) = move_to_next_node(
+        bfs_current_node,
+        bfs_current_node_index,
+        bfs_search,
+        bfs_visited,
+        bfs_path,
+        bfs_length,
+        bfs_time,
+        bfs_code_runtime,
     )
 
-    dfs_current_node, dfs_current_node_index, dfs_path, dfs_length, dfs_time = (
-        move_to_next_node(
-            dfs_current_node,
-            dfs_current_node_index,
-            dfs_search,
-            dfs_visited,
-            dfs_path,
-            dfs_length,
-            dfs_time,
-        )
+    (
+        dfs_current_node,
+        dfs_current_node_index,
+        dfs_path,
+        dfs_length,
+        dfs_time,
+        dfs_code_runtime,
+    ) = move_to_next_node(
+        dfs_current_node,
+        dfs_current_node_index,
+        dfs_search,
+        dfs_visited,
+        dfs_path,
+        dfs_length,
+        dfs_time,
+        dfs_code_runtime,
     )
 
     print()
@@ -524,11 +554,35 @@ dfs_length = round(dfs_length, 2)
 
 print("Speed:", speed, "km/h")
 print("A* route:", a_star_path)
-print("Total run time:", a_star_time, "hours. Total route length:", a_star_length)
+print(
+    "Total run time:",
+    a_star_time,
+    "hours. Total route length:",
+    a_star_length,
+    "km. Total search route time:",
+    a_star_code_runtime,
+    "s",
+)
 print("BFS route:", bfs_path)
-print("Total run time:", bfs_time, "hours. Total route length:", bfs_length)
+print(
+    "Total run time:",
+    bfs_time,
+    "hours. Total route length:",
+    bfs_length,
+    "km. Total search route time:",
+    bfs_code_runtime,
+    "s",
+)
 print("DFS route:", dfs_path)
-print("Total run time:", dfs_time, "hours. Total route length:", dfs_length)
+print(
+    "Total run time:",
+    dfs_time,
+    "hours. Total route length:",
+    dfs_length,
+    "km. Total search route time:",
+    dfs_code_runtime,
+    "s",
+)
 
 # Trong bài toán chọn con đường tối ưu để hạn chế tắc đường, nếu có 1 đoạn là PFICP và 1 đoạn không thì nên ưu tiên
 # chọn con đường nào?
